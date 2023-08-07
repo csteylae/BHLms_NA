@@ -1,0 +1,125 @@
+---
+title: "BHLms Network Analysis"
+author: "Steylaers Chloé"
+date: '2023-08-07'
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+
+# Libraries and data loading
+
+```{r, warning = FALSE, message = FALSE}
+
+# Charger les bibliothèques nécessaires
+library(readr)
+library(stringr)
+library(tidyverse)
+library(knitr)
+library(sna)
+library(network)
+library(ggnetwork)
+library(ggplot2)
+```
+
+
+
+```{r, warning = FALSE, message = FALSE}
+
+# Importer les data
+dossierBHL <- read_csv("dossier-bhl.csv")
+saints <- read_csv("saints-db.csv")
+# View(saints)
+
+```
+
+
+
+```{r}
+
+saints$fa_sexe <- as.factor(saints$Sexe)
+saints$fa_statut <- as.factor(saints$Statut)
+saints$fa_statut_rel <- as.factor(saints$`Statut religieux`)
+
+
+summary(saints$fa_statut)
+summary(saints$fa_statut_rel)
+summary(saints$fa_sexe)
+
+
+ggplot(saints)+
+  geom_bar(mapping = aes(fa_sexe, fill = fa_sexe))+
+  ggtitle("Répartition des sexes des saints au sein de la base données")+
+  labs(x="sexe", y = "nombre d'individus")+
+  labs(fill = "sexe")
+
+
+ggplot(saints)+
+  geom_bar(mapping = aes(fa_statut, fill = fa_sexe))+
+  ggtitle("Répartition des saints selon leur statut dans l'Eglise et leur sexe")+
+  labs(x="statut religieux", y = "nombre d'individus", fill = "sexe")
+
+```
+
+
+
+```{r, warning=FALSE}
+
+# Nettoyage des données
+saints_list <- str_replace_all(dossierBHL$`Relations : Dossiers BHL / Saints`,
+                               "[\\[\\]'']", "") %>%
+  str_split(", ") %>%
+  set_names(seq_along(.))
+
+# Création d'une liste de toutes les paires de saints dans chaque entrée
+pairs_list <- lapply(saints_list, function(x) {
+  if (length(x) > 1) {
+    combn(x, 2, simplify = FALSE)
+  }
+})
+
+# Supprimer les NULL dans la liste de paires
+pairs_list <- pairs_list[!sapply(pairs_list, is.null)]
+
+# Création d'un dataframe à partir de la liste de paires
+edges_df <- do.call(rbind, lapply(pairs_list, function(x) do.call(rbind, x))) %>%
+  as_tibble() %>%
+  set_names(c("from", "to"))
+
+# Sélectionnez les colonnes nécessaires et filtrez les lignes pour ne garder que
+# les saints qui se trouvent dans la edge list (cad que ceux qui ont des liens)
+sub_db <- saints%>%
+  select(Id, fa_sexe, fa_statut, fa_statut_rel) %>%
+  filter(Id %in% edges_df$from)  
+
+# Pour Gephi : write.csv(edges_df, file = "edges.csv", row.names = FALSE)
+#              write.csv(sub_db, file = "nodes.csv", row.names = FALSE)
+
+saints_net <- as.network(edges_df, matrix.type = "edgelist", 
+                         directed = FALSE, multiple = FALSE, edge.check = TRUE) 
+
+```
+
+Voir : https://matteo.gagliolo.web.ulb.be/SOCAD460/centrality.html#2_Closeness 
+
+```{r}
+gden(saints_net)
+```
+
+
+```{r}
+ggplot(data = saints_net, 
+       aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_edges(color = "black") +
+  geom_nodes(size = 3) +
+  theme_void()
+
+```
+
+lien vers le réseau en ligne : https://ouestware.gitlab.io/retina/beta/#/graph/?url=https%3A%2F%2Fgist.githubusercontent.com%2Fcsteylae%2F3d72b4fc6144cd4db92099ef33f9953d%2Fraw%2F82ac20e24d9623a6c425599760327ba128828c1a%2Fnetwork-427a34e0-374.gexf&n=Ambrosius%20(181)
+
+
+
+
+
