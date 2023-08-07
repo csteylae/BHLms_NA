@@ -117,7 +117,7 @@ ggplot(data = saints_net,
 
 ```
 
-lien vers le réseau en ligne : https://ouestware.gitlab.io/retina/beta/#/graph/?url=https%3A%2F%2Fgist.githubusercontent.com%2Fcsteylae%2F3d72b4fc6144cd4db92099ef33f9953d%2Fraw%2F82ac20e24d9623a6c425599760327ba128828c1a%2Fnetwork-427a34e0-374.gexf&n=Ambrosius%20(181)
+lien vers le réseau en ligne : https://ouestware.gitlab.io/retina/beta/#/graph/?url=https://gist.githubusercontent.com/csteylae/ca71041502a85631c186146ea92a0b0b/raw/0cb05a6de4db4b8d2e5442f9f810581a7c08322e/network-38fd025a-d94.gexf
 
 
 
